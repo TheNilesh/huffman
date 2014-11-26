@@ -1,0 +1,184 @@
+/* Title: Huffman Coding for files
+   Date: 25/11/2014*/
+
+/* Algorithm
+1. Read input file
+2. Record character frequency
+3. Construct huffman tree
+   i. Arrange char freq in ascending list
+   ii.Create new node, add two least freq nodes to left and right
+   iii.insert created node into ascending list
+   iv. repeat ii & iii till no nodes remains
+   v. Traverse tree in preorder and create new list with character codes at each.
+4. Read input file [Pass2]
+5. Write frequency table into output file
+6. write code in place of each character into new file
+7. End
+*/
+
+#include<stdio.h>
+#include<malloc.h>
+void printll();
+void makeTree();
+
+typedef struct node
+{
+	char x;
+	int freq;
+	struct node *next;
+	struct node *left;
+	struct node *right;
+}node;
+node *HEAD;
+
+void preorder(node *p);
+
+node* newNode(char c)
+{
+	node *q;
+	q=(node *)malloc(sizeof(node));
+	q->x=c;
+	q->freq=1;
+	q->next=NULL;
+	return q;
+}
+
+void insert(node *p,node *m)
+{ // insert p in list as per its freq., start from m to right
+if(m->next==NULL)
+{  m->next=p; return;}
+	while(m->next->freq < p->freq)
+	{  m=m->next;
+	  if(m->next==NULL)
+	    { m->next=p; return; }
+	}
+  p->next=m->next;
+  m->next=p;
+}
+
+void addSym(char c)
+{
+node *p,*q,*m;
+int t;
+
+if(HEAD==NULL)
+{	HEAD=newNode(c);
+	return;
+}
+	p=HEAD; q=NULL;
+if(p->x==c) //item found in HEAD
+{
+	p->freq+=1;
+	if(p->next==NULL)
+		return;
+	if(p->freq > p->next->freq) //what if p->next==NULL?
+	{
+		HEAD=p->next;
+		p->next=NULL;
+		insert(p,HEAD);
+	}
+	return;
+}
+
+while(p->next!=NULL && p->x!=c)
+{
+	q=p; p=p->next;
+}
+
+if(p->x==c)
+{
+	p->freq+=1;
+        if(p->next==NULL)
+		return;	
+	if(p->freq > p->next->freq) //what if p->next==NULL?
+	{
+		m=p->next;
+		q->next=p->next;
+		p->next=NULL;
+		insert(p,HEAD);
+	}
+}
+else  //p->next==NULL , all list traversed c is not found, insert it at beginning
+{	
+	q=newNode(c);
+	q->next=HEAD;  //first because freq is minimum
+	HEAD=q;
+}
+}
+
+void printll()
+{
+node *p;
+p=HEAD;
+
+ while(p!=NULL)
+ {
+   printf("[%c|%d]=>",p->x,p->freq);
+   p=p->next;
+ }
+}
+
+int main(int argc, char *argv[])
+{
+//1
+FILE *fp;
+char ch;
+HEAD=NULL;
+fp=fopen(argv[1],"r");
+if(fp==NULL)
+{ printf("File open error.");	return -1; }
+
+	while((ch=getc(fp))!=EOF)
+	{
+		addSym(ch);
+		//printf("%c",ch);
+	}
+
+	printll();
+makeTree();
+printf("Preorder tree");
+preorder(HEAD);
+return 0;
+}
+
+void makeTree()
+{
+node  *p,*q;
+p=HEAD;
+	while(p!=NULL)
+	{
+		q=newNode('#');
+		q->left=p;
+		q->freq=p->freq;
+		if(p->next!=NULL)
+		{
+			p=p->next;
+			q->right=p;
+			q->freq+=p->freq;
+			if(p->next!=NULL)
+				HEAD=p->next;
+			else
+				{
+					HEAD=q; //list finished
+					return;
+				}
+		}
+		else
+		{
+					HEAD=q; //list finished in case list had only one node
+					return;
+		}		
+		insert(q,HEAD);
+		p=p->next;
+	}
+}
+
+void preorder(node *p)
+{
+	if(p!=NULL)
+	{
+	printf("[%c|%d]",p->x,p->freq);
+	preorder(p->left);
+	preorder(p->right);
+	}
+}
