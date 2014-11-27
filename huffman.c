@@ -19,8 +19,6 @@
 #include<stdio.h>
 #include<malloc.h>
 #include<string.h>
-void printll();
-void makeTree();
 
 typedef struct node
 {
@@ -31,8 +29,14 @@ typedef struct node
 	struct node *left;
 	struct node *right;
 }node;
-node *HEAD;
 
+node *HEAD,*ROOT;
+
+void printll();
+void makeTree();
+void genCode(node *p,char* code);
+void insert(node *p,node *m);
+void addSymbol(char c);
 void genCode(node *p,char* code);
 
 node* newNode(char c)
@@ -45,6 +49,60 @@ node* newNode(char c)
 	q->left=NULL;
 	q->right=NULL;
 	return q;
+}
+
+void printll()
+{
+node *p;
+p=HEAD;
+
+ while(p!=NULL)
+ {
+   printf("[%c|%d]=>",p->x,p->freq);
+   p=p->next;
+ }
+}
+
+int main(int argc, char *argv[])
+{
+FILE *fp,*fp2;
+char ch;
+HEAD=NULL;
+ROOT=NULL;
+fp=fopen(argv[1],"r");
+if(fp==NULL)
+{ printf("File open error.");	return -1; }
+
+printf("\n[Pass1]");
+printf("\nReading file %s",argv[1]);
+	while((ch=getc(fp))!=EOF)
+	{
+		addSymbol(ch);
+		//printf("%c",ch);
+	}
+	fclose(fp);
+printf("\nFrequency List:\n");
+printll();
+printf("\nConstructing Huffman-Tree..");
+makeTree();
+printf("\nTree Constructed..\nPreorder Traversal of H-Tree\n");
+genCode(ROOT,"\0");
+printf("\n\n[Pass2]");
+printf("\nReading file %s",argv[1]);
+printf("\nOpening file %s.hzip",argv[1]);
+fp=fopen(argv[1],"r");
+fp2=fopen(strcat(argv[1],".hzip"),"wb");
+printf("\nWriting Header info");
+	//freqtbl(fp2);
+printf("\nWriting compressed content.");
+	while((ch=getc(fp))!=EOF)
+	{
+		//fwrite(getCode(ch));
+	}
+	fclose(fp);
+	fclose(fp2);
+printf("\nDone..\n");
+return 0;
 }
 
 void insert(node *p,node *m)
@@ -111,42 +169,6 @@ else  //p->next==NULL , all list traversed c is not found, insert it at beginnin
 }
 }
 
-void printll()
-{
-node *p;
-p=HEAD;
-
- while(p!=NULL)
- {
-   printf("[%c|%d]=>",p->x,p->freq);
-   p=p->next;
- }
-}
-
-int main(int argc, char *argv[])
-{
-FILE *fp;
-char ch;
-HEAD=NULL;
-fp=fopen(argv[1],"r");
-if(fp==NULL)
-{ printf("File open error.");	return -1; }
-
-	while((ch=getc(fp))!=EOF)
-	{
-		addSymbol(ch);
-		//printf("%c",ch);
-	}
-
-	printll();
-makeTree();
-printf("\nPreorder tree\n");
-//preorder(HEAD);
-genCode(HEAD,"\0");
-
-return 0;
-}
-
 void makeTree()
 {
 node  *p,*q;
@@ -175,7 +197,7 @@ p=HEAD;
 		else
 			insert(q,p);	//find appropriate position
 	}//while
-	HEAD=q; //q created at last iteration is ROOT of h-tree
+	ROOT=q; //q created at last iteration is ROOT of h-tree
 }
 
 
