@@ -1,5 +1,6 @@
 /* Title: Huffman Coding for files
-   Date: 25/11/2014*/
+   Date_start: 25/11/2014
+   Author: niLesh	*/
 
 /* Algorithm
 1. Read input file
@@ -11,8 +12,8 @@
    iv. repeat ii & iii till no nodes remains
    v. Traverse tree in preorder and create new list with character codes at each.
 4. Read input file [Pass2]
-5. Write frequency table into output file
-6. write code in place of each character into new file
+5. Write Mapping Table to output file
+6. write code in place of character to output file
 7. End
 */
 
@@ -38,6 +39,7 @@ void genCode(node *p,char* code);
 void insert(node *p,node *m);
 void addSymbol(char c);
 void genCode(node *p,char* code);
+void mappingtbl(FILE *f);
 
 node* newNode(char c)
 {
@@ -93,7 +95,7 @@ printf("\nOpening file %s.hzip",argv[1]);
 fp=fopen(argv[1],"r");
 fp2=fopen(strcat(argv[1],".hzip"),"wb");
 printf("\nWriting Header info");
-	//freqtbl(fp2);
+	//mappingtbl(fp2);
 printf("\nWriting compressed content.");
 	while((ch=getc(fp))!=EOF)
 	{
@@ -104,7 +106,14 @@ printf("\nWriting compressed content.");
 printf("\nDone..\n");
 return 0;
 }
+void mappingtbl(FILE *f)
+{// Table mapping codewords to actual symbol
+//Write No of bytes(long unsigned int) occupied by header, it will help in reading content
 
+// struct symCode
+//{ char x; binary code; };
+//Write symCode[] array
+}
 void insert(node *p,node *m)
 { // insert p in list as per its freq., start from m to right,
 // we cant place node smaller than m since we dont have ptr to node left to m
@@ -120,7 +129,7 @@ if(m->next==NULL)
 }
 
 void addSymbol(char c)
-{
+{// Insert symbols into linked list if its new, otherwise freq++
 node *p,*q,*m;
 int t;
 
@@ -208,7 +217,7 @@ char *lcode,*rcode;
 	{
 	p->code=code;	//assign code to current node
 	printf("[%c|%d|%s]",p->x,p->freq,p->code);
-	lcode=(char *)malloc(strlen(code)+2);		//optimal memory allocation
+	lcode=(char *)malloc(strlen(code)+2);
 	rcode=(char *)malloc(strlen(code)+2);
 	sprintf(lcode,"%s0",code);
 	sprintf(rcode,"%s1",code);
