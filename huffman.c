@@ -18,6 +18,7 @@
 
 #include<stdio.h>
 #include<malloc.h>
+#include<string.h>
 void printll();
 void makeTree();
 
@@ -25,13 +26,14 @@ typedef struct node
 {
 	char x;
 	int freq;
+	char *code;
 	struct node *next;
 	struct node *left;
 	struct node *right;
 }node;
 node *HEAD;
 
-void preorder(node *p);
+void genCode(node *p,char* code);
 
 node* newNode(char c)
 {
@@ -40,11 +42,14 @@ node* newNode(char c)
 	q->x=c;
 	q->freq=1;
 	q->next=NULL;
+	q->left=NULL;
+	q->right=NULL;
 	return q;
 }
 
 void insert(node *p,node *m)
-{ // insert p in list as per its freq., start from m to right
+{ // insert p in list as per its freq., start from m to right,
+// we cant place node smaller than m since we dont have ptr to node left to m
 if(m->next==NULL)
 {  m->next=p; return;}
 	while(m->next->freq < p->freq)
@@ -56,7 +61,7 @@ if(m->next==NULL)
   m->next=p;
 }
 
-void addSym(char c)
+void addSymbol(char c)
 {
 node *p,*q,*m;
 int t;
@@ -71,7 +76,7 @@ if(p->x==c) //item found in HEAD
 	p->freq+=1;
 	if(p->next==NULL)
 		return;
-	if(p->freq > p->next->freq) //what if p->next==NULL?
+	if(p->freq > p->next->freq)
 	{
 		HEAD=p->next;
 		p->next=NULL;
@@ -90,7 +95,7 @@ if(p->x==c)
 	p->freq+=1;
         if(p->next==NULL)
 		return;	
-	if(p->freq > p->next->freq) //what if p->next==NULL?
+	if(p->freq > p->next->freq)
 	{
 		m=p->next;
 		q->next=p->next;
@@ -120,7 +125,6 @@ p=HEAD;
 
 int main(int argc, char *argv[])
 {
-//1
 FILE *fp;
 char ch;
 HEAD=NULL;
@@ -130,14 +134,16 @@ if(fp==NULL)
 
 	while((ch=getc(fp))!=EOF)
 	{
-		addSym(ch);
+		addSymbol(ch);
 		//printf("%c",ch);
 	}
 
 	printll();
 makeTree();
-printf("Preorder tree");
-preorder(HEAD);
+printf("\nPreorder tree\n");
+//preorder(HEAD);
+genCode(HEAD,"\0");
+
 return 0;
 }
 
@@ -148,37 +154,43 @@ p=HEAD;
 	while(p!=NULL)
 	{
 		q=newNode('#');
-		q->left=p;
+		q->left=p;		//join left subtree/node
 		q->freq=p->freq;
 		if(p->next!=NULL)
 		{
 			p=p->next;
-			q->right=p;
+			q->right=p;	//join right subtree /node
 			q->freq+=p->freq;
-			if(p->next!=NULL)
-				HEAD=p->next;
-			else
-				{
-					HEAD=q; //list finished
-					return;
-				}
+		}
+		p=p->next;	//consider next node frm list
+		if(p==NULL)	//list ends
+			break;
+		//insert new subtree rooted at q into list starting from p
+		//if q smaller than p
+		if(q->freq <= p->freq)
+		{//place it before p
+			q->next=p;
+			p=q;
 		}
 		else
-		{
-					HEAD=q; //list finished in case list had only one node
-					return;
-		}		
-		insert(q,HEAD);
-		p=p->next;
-	}
+			insert(q,p);	//find appropriate position
+	}//while
+	HEAD=q; //q created at last iteration is ROOT of h-tree
 }
 
-void preorder(node *p)
+
+void genCode(node *p,char* code)
 {
+char *lcode,*rcode;
 	if(p!=NULL)
 	{
-	printf("[%c|%d]",p->x,p->freq);
-	preorder(p->left);
-	preorder(p->right);
+	p->code=code;	//assign code to current node
+	printf("[%c|%d|%s]",p->x,p->freq,p->code);
+	lcode=(char *)malloc(strlen(code)+2);		//optimal memory allocation
+	rcode=(char *)malloc(strlen(code)+2);
+	sprintf(lcode,"%s0",code);
+	sprintf(rcode,"%s1",code);
+	genCode(p->left,lcode);		//left child has 0 appended to current node's code
+	genCode(p->right,rcode);
 	}
 }
