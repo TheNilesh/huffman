@@ -12,8 +12,8 @@
    iv. repeat ii & iii till no nodes remains
    v. Traverse tree in preorder and create new list with character codes at each.
 4. Read input file [Pass2]
-5. Write Mapping Table to output file
-6. write code in place of character to output file
+5. Write Mapping Table to output file TODO
+6. write code in place of character to output file, TODO:fix
 7. End
 */
 
@@ -21,6 +21,8 @@
 #include<malloc.h>
 #include<string.h>
 #define MAX 8
+#define BUFFER_NOT_WRITTEN -1
+#define BUFFER_WRITTEN 0
 
 typedef struct node
 {
@@ -71,7 +73,7 @@ int main(int argc, char *argv[])
 {
 FILE *fp,*fp2;
 char ch;
-char *ptr;int codelen;
+int t;
 HEAD=NULL;
 ROOT=NULL;
 fp=fopen(argv[1],"r");
@@ -99,64 +101,83 @@ printf("\nOpening file %s.hzip",argv[1]);
 fp=fopen(argv[1],"r");
 fp2=fopen(strcat(argv[1],".hzip"),"wb");
 printf("\nWriting Header info");
-	//mappingtbl(fp2);
+	mappingtbl(fp2);
 printf("\nWriting compressed content.");
 	while((ch=getc(fp))!=EOF)
-	{
-		writeCode(ch,fp2);	//write corresponding code into fp2
-	}
+		t=writeCode(ch,fp2);	//write corresponding code into fp2
+	if(t==BUFFER_NOT_WRITTEN)
+		printf("\nSome bits(<8) are not written to file, because only bytes can be written not bits.");
 	fclose(fp);
 	fclose(fp2);
 printf("\nDone..\n");
 return 0;
 }
 
-/*
 void mappingtbl(FILE *f)
-{// write Table mapping 'codewords' to actual symbols
-long unsigned int n;
-
-typedef struct symCode
+{//Table mapping 'codewords' to actual symbols
+typedef struct symCode		//struct to write
 { char x;
-  char code[MAX];  //?? we cant determine MAX, it is length of longest codeword
+  char code[MAX];  //?? we cant determine MAX, it is length of longest codeword TODO
 }symCode;
+long unsigned int n;
+symCode xyz;
+node *p;
+int i=0;
+p=HEAD;
+while(p!=NULL)	// Just to determine header size
+{	i++;p=p->next; }
+n=i*sizeof(symCode)+sizeof(long unsigned int);//Header size in bytes, it will help in reading
+fwrite(&n,sizeof(long unsigned int),1,f);
 
-symCode *info,*p;
-//start from HEAD, read each char & its code
-
-
-fwrite(&n,sizeof(long unsigned int),1,f);//Write No of bytes(long unsigned int) occupied by header, it will help in reading content
-fwrite(info,sizeof(symCode),n,f);
+//Write Table
+p=HEAD;
+while(p!=NULL)	//start from HEAD, read each char & its code
+{
+	xyz.x=p->x;
+	strcpy(xyz.code,p->code);
+	fwrite(&xyz,sizeof(xyz),1,f);
+	//printf("\n%ld bytes written",sizeof(xyz));
+	p=p->next;
 }
-*/
+}//fun
 
 int writeCode(char ch,FILE *f)
 {
 char *code;
+int t;
 code=getCode(ch);
-	while(code!='\0')
+//printf("writing %s",code);
+	while(*code!='\0')
 	{
 		if(*code='1')
-			writeBit(1,f); //write bit 1 into file f
+			t=writeBit(1,f); //write bit 1 into file f
 		else
-			writeBit(0,f);
+			t=writeBit(0,f);
 	code++;
 	}
+	return t;
 }
 
 int writeBit(int b,FILE *f)
-{//Logic: Maintain static buffer, if it is full, write into file 
-	static unsigned char byte;
-	static char cnt;
+{//My Logic: Maintain static buffer, if it is full, write into file 
+	static char byte;
+	static int cnt;
 	char temp;
+	//printf("\nSetting %dth bit = %d of %d ",cnt,b,byte);
 	if(b==1)
-		temp=1;
-	temp<<(7-cnt);
-	byte=byte | temp;
+	{	temp=1;
+		temp=temp<<(7-cnt);		//right shift bits
+		byte=byte | temp;
+	}
 	cnt++;
-		
-	if(cnt==7)	
-	{	cnt=0; fwrite(&byte,1,1,f);  }
+	
+	if(cnt==8)	//buffer full
+	{
+		fwrite(&byte,sizeof(char),1,f);
+		cnt=0; byte=0;	//reset buffer
+		return BUFFER_WRITTEN; // buffer written to file
+	}
+	return BUFFER_NOT_WRITTEN;//buffer is not full, so not written
 }
 
 char *getCode(char ch)
