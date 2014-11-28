@@ -20,6 +20,7 @@
 #include<stdio.h>
 #include<malloc.h>
 #include<string.h>
+#define MAX 8
 
 typedef struct node
 {
@@ -38,8 +39,9 @@ void makeTree();
 void genCode(node *p,char* code);
 void insert(node *p,node *m);
 void addSymbol(char c);
-void genCode(node *p,char* code);
 void mappingtbl(FILE *f);
+int writeCode(char ch,FILE *f);
+char *getCode(char ch);
 
 node* newNode(char c)
 {
@@ -69,6 +71,7 @@ int main(int argc, char *argv[])
 {
 FILE *fp,*fp2;
 char ch;
+char *ptr;int codelen;
 HEAD=NULL;
 ROOT=NULL;
 fp=fopen(argv[1],"r");
@@ -87,9 +90,10 @@ printf("\nFrequency List:\n");
 printll();
 printf("\nConstructing Huffman-Tree..");
 makeTree();
-printf("\nTree Constructed..\nPreorder Traversal of H-Tree\n");
-genCode(ROOT,"\0");
+printf("\nTree Constructed..\nAssigning Codewords.\n");
+genCode(ROOT,"\0");	//preorder traversal
 printf("\n\n[Pass2]");
+printll();
 printf("\nReading file %s",argv[1]);
 printf("\nOpening file %s.hzip",argv[1]);
 fp=fopen(argv[1],"r");
@@ -99,21 +103,74 @@ printf("\nWriting Header info");
 printf("\nWriting compressed content.");
 	while((ch=getc(fp))!=EOF)
 	{
-		//fwrite(getCode(ch));
+		writeCode(ch,fp2);	//write corresponding code into fp2
 	}
 	fclose(fp);
 	fclose(fp2);
 printf("\nDone..\n");
 return 0;
 }
-void mappingtbl(FILE *f)
-{// Table mapping codewords to actual symbol
-//Write No of bytes(long unsigned int) occupied by header, it will help in reading content
 
-// struct symCode
-//{ char x; binary code; };
-//Write symCode[] array
+/*
+void mappingtbl(FILE *f)
+{// write Table mapping 'codewords' to actual symbols
+long unsigned int n;
+
+typedef struct symCode
+{ char x;
+  char code[MAX];  //?? we cant determine MAX, it is length of longest codeword
+}symCode;
+
+symCode *info,*p;
+//start from HEAD, read each char & its code
+
+
+fwrite(&n,sizeof(long unsigned int),1,f);//Write No of bytes(long unsigned int) occupied by header, it will help in reading content
+fwrite(info,sizeof(symCode),n,f);
 }
+*/
+
+int writeCode(char ch,FILE *f)
+{
+char *code;
+code=getCode(ch);
+	while(code!='\0')
+	{
+		if(*code='1')
+			writeBit(1,f); //write bit 1 into file f
+		else
+			writeBit(0,f);
+	code++;
+	}
+}
+
+int writeBit(int b,FILE *f)
+{//Logic: Maintain static buffer, if it is full, write into file 
+	static unsigned char byte;
+	static char cnt;
+	char temp;
+	if(b==1)
+		temp=1;
+	temp<<(7-cnt);
+	byte=byte | temp;
+	cnt++;
+		
+	if(cnt==7)	
+	{	cnt=0; fwrite(&byte,1,1,f);  }
+}
+
+char *getCode(char ch)
+{
+node *p=HEAD;
+	while(p!=NULL)
+	{
+	    if(p->x==ch)
+		  return p->code;
+	    p=p->next;
+	}
+	return NULL; //not found
+}
+
 void insert(node *p,node *m)
 { // insert p in list as per its freq., start from m to right,
 // we cant place node smaller than m since we dont have ptr to node left to m
@@ -209,19 +266,33 @@ p=HEAD;
 	ROOT=q; //q created at last iteration is ROOT of h-tree
 }
 
-
 void genCode(node *p,char* code)
 {
 char *lcode,*rcode;
-	if(p!=NULL)
-	{
+static node *s;
+static int flag;
+if(p!=NULL)
+{
+//sort linked list as it was
+	if(p->x!='#')   //leaf node
+	{	if(flag==0) //first leaf node
+		{flag=1; HEAD=p;}
+		else	//other leaf nodes
+		{ s->next=p;}		//sorting LL
+		p->next=NULL;
+		s=p;
+	}
+
+//assign code
 	p->code=code;	//assign code to current node
 	printf("[%c|%d|%s]",p->x,p->freq,p->code);
 	lcode=(char *)malloc(strlen(code)+2);
 	rcode=(char *)malloc(strlen(code)+2);
 	sprintf(lcode,"%s0",code);
 	sprintf(rcode,"%s1",code);
+//recursive DFS
 	genCode(p->left,lcode);		//left child has 0 appended to current node's code
 	genCode(p->right,rcode);
-	}
 }
+}
+
