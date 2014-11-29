@@ -2,21 +2,35 @@
    Date_start: 25/11/2014
    Author: niLesh	*/
 
-/* Algorithm
+/* Algorithm v2
+[Pass1]
 1. Read input file
-2. Record character frequency
-3. Construct huffman tree
-   i. Arrange char freq in ascending list
-   ii.Create new node, add two least freq nodes to left and right
-   iii.insert created node into ascending list
-   iv. repeat ii & iii till no nodes remains
-   v. Traverse tree in preorder and create new list with character codes at each.
-4. Read input file [Pass2]
-5. Write Mapping Table to output file
-6. write code in place of character to output file
+2. Create sorted linked list of characters from file, as per character frequency
+   for eah character ch from file
+	if( ch available in linked list at node p) then 
+	{
+		p.freq++;
+		sort Linked list as per node's freq;
+	}
+	else
+		add new node at beginning of linked list with frequency=1;
+
+3. Construct huffman tree from linked list
+   i.Create new node q, join two least freq nodes to its left and right
+   ii.insert created node q into ascending list
+   iii. repeat i & ii till only one nodes remains, i.e, ROOT of h-tree
+   iv. Traverse tree in preorder mark each node with its codeword. simultaneously Recreate linked list of leaf nodes.
+
+[Pass2]
+4. Write Mapping Table(character to codeword) to output file.
+5. Read input file.
+6. Write codeword in place of each character in input file to output file
+   for each character ch from input file
+	write corresponding codeword into o/p file (lookup in mapping table OR linked list)
 7. End
 TODO: '#' Should not be tag for internal nodes, identify internal node with some other tag
 TODO: read input files in binary mode.
+TODO: Make program efficient by sorting linked list in descending order.(high speed searching)
 */
 
 #include<stdio.h>
