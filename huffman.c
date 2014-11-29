@@ -12,15 +12,17 @@
    iv. repeat ii & iii till no nodes remains
    v. Traverse tree in preorder and create new list with character codes at each.
 4. Read input file [Pass2]
-5. Write Mapping Table to output file TODO
-6. write code in place of character to output file, TODO:fix
+5. Write Mapping Table to output file
+6. write code in place of character to output file
 7. End
+TODO: '#' Should not be tag for internal nodes, identify internal node with some other tag
+TODO: read input files in binary mode.
 */
 
 #include<stdio.h>
 #include<malloc.h>
 #include<string.h>
-#define MAX 8
+#define MAX 9
 #define BUFFER_NOT_WRITTEN -1
 #define BUFFER_WRITTEN 0
 
@@ -41,7 +43,7 @@ void makeTree();
 void genCode(node *p,char* code);
 void insert(node *p,node *m);
 void addSymbol(char c);
-void mappingtbl(FILE *f);
+void writeHeader(FILE *f);
 int writeCode(char ch,FILE *f);
 char *getCode(char ch);
 
@@ -57,6 +59,7 @@ node* newNode(char c)
 	return q;
 }
 
+/*
 void printll()
 {
 node *p;
@@ -68,7 +71,7 @@ p=HEAD;
    p=p->next;
  }
 }
-
+*/
 int main(int argc, char *argv[])
 {
 FILE *fp,*fp2;
@@ -88,57 +91,68 @@ printf("\nReading file %s",argv[1]);
 		//printf("%c",ch);
 	}
 	fclose(fp);
-printf("\nFrequency List:\n");
-printll();
+printf("\nReading frequencies of characters.");
+//printll();
 printf("\nConstructing Huffman-Tree..");
 makeTree();
-printf("\nTree Constructed..\nAssigning Codewords.\n");
+printf("\nAssigning Codewords.\n");
 genCode(ROOT,"\0");	//preorder traversal
-printf("\n\n[Pass2]");
-printll();
+printf("\n[Pass2]");
 printf("\nReading file %s",argv[1]);
-printf("\nOpening file %s.hzip",argv[1]);
+printf("\nWriting file %s.hzip",argv[1]);
 fp=fopen(argv[1],"r");
 fp2=fopen(strcat(argv[1],".hzip"),"wb");
 printf("\nWriting Header info");
-	mappingtbl(fp2);
+	writeHeader(fp2);
 printf("\nWriting compressed content.");
 	while((ch=getc(fp))!=EOF)
 		t=writeCode(ch,fp2);	//write corresponding code into fp2
 	if(t==BUFFER_NOT_WRITTEN)
-		printf("\nSome bits(<8) are not written to file, because only bytes can be written not bits.");
+		printf("\n[!]Some bits(<8) have not been written to file.");
 	fclose(fp);
 	fclose(fp2);
 printf("\nDone..\n");
 return 0;
 }
 
-void mappingtbl(FILE *f)
+void writeHeader(FILE *f)
 {//Table mapping 'codewords' to actual symbols
-typedef struct symCode		//struct to write
+typedef struct symCode
 { char x;
-  char code[MAX];  //?? we cant determine MAX, it is length of longest codeword TODO
+  char code[MAX];  //Max. codeword length=8,+1 for '\0', so MAX=9, TODO: Sometimes Max length of codeword >=12, How??..Handle that case
 }symCode;
-long unsigned int n;
 symCode xyz;
 node *p;
-int i=0;
+int temp=0;
+unsigned char padding,i=0;	//TODO: i shouldnt be int, because max no. of char(byte)=2^8=256, but i can have max value=255,here
 p=HEAD;
-while(p!=NULL)	// Just to determine header size
-{	i++;p=p->next; }
-n=i*sizeof(symCode)+sizeof(long unsigned int);//Header size in bytes, it will help in reading
-fwrite(&n,sizeof(long unsigned int),1,f);
+while(p!=NULL)	//determine number of unique symbols and padding of bits
+{
+	temp+=(strlen(p->code)) * (p->freq);		//temp stores padding
+	temp%=8;
+	i++;
+	p=p->next;
+}
+fwrite(&i,sizeof(char),1,f);	//read these many structures while reading
+//printf("\nN=%d",i);
 
-//Write Table
 p=HEAD;
-while(p!=NULL)	//start from HEAD, read each char & its code
+while(p!=NULL)	//start from HEAD, write each char & its code
 {
 	xyz.x=p->x;
 	strcpy(xyz.code,p->code);
 	fwrite(&xyz,sizeof(xyz),1,f);
-	//printf("\n%ld bytes written",sizeof(xyz));
+//	printf("\n%c|%s",xyz.x,xyz.code);
 	p=p->next;
 }
+//discard 'padding' bits before data, while reading
+padding=8-(char)temp;	//int to char & padding = 8-bitsExtra
+fwrite(&padding,sizeof(char),1,f);
+//printf("\npadding=%d",padding);
+//do actual padding
+for(i=0;i<padding;i++)
+	writeBit(0,f);
+
 }//fun
 
 int writeCode(char ch,FILE *f)
@@ -146,10 +160,10 @@ int writeCode(char ch,FILE *f)
 char *code;
 int t;
 code=getCode(ch);
-//printf("writing %s",code);
+//printf("\nwriting %s",code);
 	while(*code!='\0')
 	{
-		if(*code='1')
+		if(*code=='1')
 			t=writeBit(1,f); //write bit 1 into file f
 		else
 			t=writeBit(0,f);
@@ -306,7 +320,7 @@ if(p!=NULL)
 
 //assign code
 	p->code=code;	//assign code to current node
-	printf("[%c|%d|%s]",p->x,p->freq,p->code);
+//	printf("[%c|%d|%s]",p->x,p->freq,p->code);
 	lcode=(char *)malloc(strlen(code)+2);
 	rcode=(char *)malloc(strlen(code)+2);
 	sprintf(lcode,"%s0",code);
