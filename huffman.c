@@ -1,7 +1,7 @@
 /* Title: Huffman Coding for files
    Date_start: 25/11/2014
    Author: niLesh	*/
-
+/*
 DONE: '#' Should not be tag for internal nodes, identify internal node with some other tag
 TODO: read input files in binary mode.
 TODO: Make program efficient by sorting linked list in descending order.(high speed searching)
@@ -10,7 +10,7 @@ TODO: Make program efficient by sorting linked list in descending order.(high sp
 #include<stdio.h>
 #include<malloc.h>
 #include<string.h>
-#define MAX 9
+#define MAX 16
 #define BUFFER_NOT_WRITTEN -1
 #define BUFFER_WRITTEN 0
 #define INTERNAL 1
@@ -70,38 +70,41 @@ char ch;
 int t;
 HEAD=NULL;
 ROOT=NULL;
-fp=fopen(argv[1],"r");
+fp=fopen(argv[1],"rb");
 if(fp==NULL)
-{ printf("File open error.");	return -1; }
+{ printf("\nFile open error.\n");	return -1; }
 
 printf("\n[Pass1]");
 printf("\nReading file %s",argv[1]);
-	while((ch=getc(fp))!=EOF)
-	{
+	while(fread(&ch,sizeof(char),1,fp)!=0)
 		addSymbol(ch);
-		//printf("%c",ch);
-	}
 	fclose(fp);
+
 printf("\nReading frequencies of characters.");
 //printll();
 printf("\nConstructing Huffman-Tree..");
 makeTree();
 printf("\nAssigning Codewords.\n");
 genCode(ROOT,"\0");	//preorder traversal
+
 printf("\n[Pass2]");
-printf("\nReading file %s",argv[1]);
-printf("\nWriting file %s.hzip",argv[1]);
 fp=fopen(argv[1],"r");
 fp2=fopen(strcat(argv[1],".hzip"),"wb");
+if(fp==NULL || fp2==NULL)
+{ printf("\nFile open error.\n");return -1; }
+
+printf("\nReading file %s",argv[1]);
+printf("\nWriting file %s.hzip",argv[1]);
 printf("\nWriting File Header.");
 	writeHeader(fp2);
 printf("\nWriting compressed content.");
-	while((ch=getc(fp))!=EOF)
+	while(fread(&ch,sizeof(char),1,fp)!=0)
 		t=writeCode(ch,fp2);	//write corresponding code into fp2
-	if(t==BUFFER_NOT_WRITTEN)
+	if(t==BUFFER_NOT_WRITTEN) //This case handled, this can be removed
 		printf("\n[!]Some bits(<8) have not been written to file.");
-	fclose(fp);
-	fclose(fp2);
+fclose(fp);
+fclose(fp2);
+
 printf("\nDone..\n");
 return 0;
 }
@@ -110,7 +113,7 @@ void writeHeader(FILE *f)
 {//Table mapping 'codewords' to actual symbols
 typedef struct symCode
 { char x;
-  char code[MAX];  //Max. codeword length=8,+1 for '\0', so MAX=9, TODO: Sometimes Max length of codeword >=12, How??..Handle that case
+  char code[MAX];  // TODO: Sometimes Max length of codeword >=12, Handle that case
 }symCode;
 symCode xyz;
 node *p;
@@ -120,6 +123,7 @@ p=HEAD;
 while(p!=NULL)	//determine number of unique symbols and padding of bits
 {
 	temp+=(strlen(p->code)) * (p->freq);		//temp stores padding
+	if(strlen(p->code)>MAX) printf("\nCodewords are longer than usual.");	//TODO: Solve this case
 	temp%=8;
 	i++;
 	p=p->next;
