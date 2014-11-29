@@ -3,7 +3,7 @@
 
 https://github.com/TheniL/huffman/  
 License: Public Domain, no warranty  
-Nilesh Akhade <akhadenilesh93@gmail.com>
+Nilesh Akhade
 
 About
 =====
@@ -23,14 +23,9 @@ Decompression program is under development.
  
 File Header
 ============================
-
----------------------------------------------
 | N= total number of unique characters(1 byte)
 | Character 1 (1 byte) | 
-| Binary codeword(string form) for Character 1 (9 bytes) |  ... | Character N (1 byte) | Binary codeword for Character N(string form)(9 bytes) |
-| p = bits padding(1 byte) | 0's, p times (p bits) |
----------------------------------------------
-
+| Binary codeword(string form) for Character 1 (9 bytes) |  ... | Character N (1 byte) | Binary codeword for Character N(string form)(9 bytes) | p = bits padding(1 byte) | 0's, p times (p bits) |
 |DATA| contains codeword in place of character
 
 Algorithm
