@@ -28,7 +28,7 @@
    for each character ch from input file
 	write corresponding codeword into o/p file (lookup in mapping table OR linked list)
 7. End
-TODO: '#' Should not be tag for internal nodes, identify internal node with some other tag
+DONE: '#' Should not be tag for internal nodes, identify internal node with some other tag
 TODO: read input files in binary mode.
 TODO: Make program efficient by sorting linked list in descending order.(high speed searching)
 */
@@ -39,12 +39,15 @@ TODO: Make program efficient by sorting linked list in descending order.(high sp
 #define MAX 9
 #define BUFFER_NOT_WRITTEN -1
 #define BUFFER_WRITTEN 0
+#define INTERNAL 1
+#define LEAF 0
 
 typedef struct node
 {
 	char x;
 	int freq;
 	char *code;
+	int type;
 	struct node *next;
 	struct node *left;
 	struct node *right;
@@ -66,6 +69,7 @@ node* newNode(char c)
 	node *q;
 	q=(node *)malloc(sizeof(node));
 	q->x=c;
+	q->type=LEAF;	//leafnode
 	q->freq=1;
 	q->next=NULL;
 	q->left=NULL;
@@ -73,7 +77,7 @@ node* newNode(char c)
 	return q;
 }
 
-/*
+
 void printll()
 {
 node *p;
@@ -85,7 +89,6 @@ p=HEAD;
    p=p->next;
  }
 }
-*/
 int main(int argc, char *argv[])
 {
 FILE *fp,*fp2;
@@ -290,7 +293,8 @@ node  *p,*q;
 p=HEAD;
 	while(p!=NULL)
 	{
-		q=newNode('#');
+		q=newNode('@');
+		q->type=INTERNAL;	//internal node
 		q->left=p;		//join left subtree/node
 		q->freq=p->freq;
 		if(p->next!=NULL)
@@ -323,7 +327,7 @@ static int flag;
 if(p!=NULL)
 {
 //sort linked list as it was
-	if(p->x!='#')   //leaf node
+	if(p->type==LEAF)   //leaf node
 	{	if(flag==0) //first leaf node
 		{flag=1; HEAD=p;}
 		else	//other leaf nodes
@@ -334,7 +338,7 @@ if(p!=NULL)
 
 //assign code
 	p->code=code;	//assign code to current node
-//	printf("[%c|%d|%s]",p->x,p->freq,p->code);
+//	printf("[%c|%d|%s|%d]",p->x,p->freq,p->code,p->type);
 	lcode=(char *)malloc(strlen(code)+2);
 	rcode=(char *)malloc(strlen(code)+2);
 	sprintf(lcode,"%s0",code);
