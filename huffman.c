@@ -3,8 +3,10 @@
    Author: niLesh	*/
 /*
 DONE: '#' Should not be tag for internal nodes, identify internal node with some other tag
-TODO: read input files in binary mode.
+DONE: read input files in binary mode.
+DOING: determine MAX at runtime
 TODO: Make program efficient by sorting linked list in descending order.(high speed searching)
+TODO: Store code from struct in bit array form, rather than string form, to save space
 */
 
 #include<stdio.h>
@@ -75,7 +77,7 @@ if(fp==NULL)
 { printf("\nFile open error.\n");	return -1; }
 
 printf("\n[Pass1]");
-printf("\nReading file %s",argv[1]);
+printf("\nReading input file %s",argv[1]);
 	while(fread(&ch,sizeof(char),1,fp)!=0)
 		addSymbol(ch);
 	fclose(fp);
@@ -93,8 +95,8 @@ fp2=fopen(strcat(argv[1],".hzip"),"wb");
 if(fp==NULL || fp2==NULL)
 { printf("\nFile open error.\n");return -1; }
 
-printf("\nReading file %s",argv[1]);
-printf("\nWriting file %s.hzip",argv[1]);
+printf("\nReading input file");
+printf("\nWriting file %s",argv[1]);
 printf("\nWriting File Header.");
 	writeHeader(fp2);
 printf("\nWriting compressed content.");
@@ -115,7 +117,7 @@ typedef struct symCode
 { char x;
   char code[MAX];  // TODO: Sometimes Max length of codeword >=12, Handle that case
 }symCode;
-symCode xyz;
+symCode record;
 node *p;
 int temp=0;
 unsigned char padding,i=0;	//TODO: i shouldnt be int, because max no. of char(byte)=2^8=256, but i can have max value=255,here
@@ -134,10 +136,10 @@ fwrite(&i,sizeof(char),1,f);	//read these many structures while reading
 p=HEAD;
 while(p!=NULL)	//start from HEAD, write each char & its code
 {
-	xyz.x=p->x;
-	strcpy(xyz.code,p->code);
-	fwrite(&xyz,sizeof(xyz),1,f);
-//	printf("\n%c|%s",xyz.x,xyz.code);
+	record.x=p->x;
+	strcpy(record.code,p->code);
+	fwrite(&record,sizeof(symCode),1,f);
+//	printf("\n%c|%s",record.x,record.code);
 	p=p->next;
 }
 //discard 'padding' bits before data, while reading
