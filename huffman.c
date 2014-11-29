@@ -2,32 +2,6 @@
    Date_start: 25/11/2014
    Author: niLesh	*/
 
-/* Algorithm v2
-[Pass1]
-1. Read input file
-2. Create sorted linked list of characters from file, as per character frequency
-   for eah character ch from file
-	if( ch available in linked list at node p) then 
-	{
-		p.freq++;
-		sort Linked list as per node's freq;
-	}
-	else
-		add new node at beginning of linked list with frequency=1;
-
-3. Construct huffman tree from linked list
-   i.Create new node q, join two least freq nodes to its left and right
-   ii.insert created node q into ascending list
-   iii. repeat i & ii till only one nodes remains, i.e, ROOT of h-tree
-   iv. Traverse tree in preorder mark each node with its codeword. simultaneously Recreate linked list of leaf nodes.
-
-[Pass2]
-4. Write Mapping Table(character to codeword) to output file.
-5. Read input file.
-6. Write codeword in place of each character in input file to output file
-   for each character ch from input file
-	write corresponding codeword into o/p file (lookup in mapping table OR linked list)
-7. End
 DONE: '#' Should not be tag for internal nodes, identify internal node with some other tag
 TODO: read input files in binary mode.
 TODO: Make program efficient by sorting linked list in descending order.(high speed searching)
@@ -119,7 +93,7 @@ printf("\nReading file %s",argv[1]);
 printf("\nWriting file %s.hzip",argv[1]);
 fp=fopen(argv[1],"r");
 fp2=fopen(strcat(argv[1],".hzip"),"wb");
-printf("\nWriting Header info");
+printf("\nWriting File Header.");
 	writeHeader(fp2);
 printf("\nWriting compressed content.");
 	while((ch=getc(fp))!=EOF)
