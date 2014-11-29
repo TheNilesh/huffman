@@ -13,8 +13,6 @@ TODO: Store code from struct in bit array form, rather than string form, to save
 #include<malloc.h>
 #include<string.h>
 #define MAX 16
-#define BUFFER_NOT_WRITTEN -1
-#define BUFFER_WRITTEN 0
 #define INTERNAL 1
 #define LEAF 0
 
@@ -37,7 +35,8 @@ void genCode(node *p,char* code);
 void insert(node *p,node *m);
 void addSymbol(char c);
 void writeHeader(FILE *f);
-int writeCode(char ch,FILE *f);
+void writeBit(int b,FILE *f);
+void writeCode(char ch,FILE *f);
 char *getCode(char ch);
 
 node* newNode(char c)
@@ -101,9 +100,7 @@ printf("\nWriting File Header.");
 	writeHeader(fp2);
 printf("\nWriting compressed content.");
 	while(fread(&ch,sizeof(char),1,fp)!=0)
-		t=writeCode(ch,fp2);	//write corresponding code into fp2
-	if(t==BUFFER_NOT_WRITTEN) //This case handled, this can be removed
-		printf("\n[!]Some bits(<8) have not been written to file.");
+		writeCode(ch,fp2);	//write corresponding code into fp2
 fclose(fp);
 fclose(fp2);
 
@@ -152,24 +149,23 @@ for(i=0;i<padding;i++)
 
 }//fun
 
-int writeCode(char ch,FILE *f)
+void writeCode(char ch,FILE *f)
 {
 char *code;
-int t;
 code=getCode(ch);
 //printf("\nwriting %s",code);
 	while(*code!='\0')
 	{
 		if(*code=='1')
-			t=writeBit(1,f); //write bit 1 into file f
+			writeBit(1,f); //write bit 1 into file f
 		else
-			t=writeBit(0,f);
+			writeBit(0,f);
 	code++;
 	}
-	return t;
+	return;
 }
 
-int writeBit(int b,FILE *f)
+void writeBit(int b,FILE *f)
 {//My Logic: Maintain static buffer, if it is full, write into file 
 	static char byte;
 	static int cnt;
@@ -186,9 +182,9 @@ int writeBit(int b,FILE *f)
 	{
 		fwrite(&byte,sizeof(char),1,f);
 		cnt=0; byte=0;	//reset buffer
-		return BUFFER_WRITTEN; // buffer written to file
+		return;// buffer written to file
 	}
-	return BUFFER_NOT_WRITTEN;//buffer is not full, so not written
+	return;
 }
 
 char *getCode(char ch)
