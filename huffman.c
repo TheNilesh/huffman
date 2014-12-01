@@ -4,7 +4,7 @@
    OC 1: 01/12/2014
    Author: niLesh	*/
 /*
-TODO: determine MAX at runtime, solve Codewords longer than MAX
+TODO: handle Codewords longer than MAX
 TODO: Use free() to deallocate memory
 TODO: sort linked list in non-increasing order, at genCode().
 TODO: Store code in bit array form(in Header), rather than string form, to save space
@@ -13,7 +13,7 @@ TODO: Store code in bit array form(in Header), rather than string form, to save 
 #include<stdio.h>
 #include<malloc.h>
 #include<string.h>
-#define MAX 16
+#include "huffman.h"
 #define INTERNAL 1
 #define LEAF 0
 
@@ -73,10 +73,18 @@ char ch;
 int t;
 HEAD=NULL;
 ROOT=NULL;
-if(argc<3)
+if(argc<=2)
 {
-	printf("Usage:\n %s <input-file-to-zip> <zipped-output-file>\n**Huffman File Compressor**\nAuthor: niLesh Akhade\nhttps://github.com/TheniL/huffman\n",argv[0]);
-	return 0;
+	printf("Usage:\n %s <input-file-to-zip> <zipped-output-file>\n***Huffman File Encoder***\nAuthor: niLesh Akhade\nhttps://github.com/TheniL/huffman\n\n",argv[0]);
+	if(argc==2)
+	{
+		argv[2]=(char *)malloc(sizeof(char)*(strlen(argv[1])+strlen(ext)+1));
+		strcpy(argv[2],argv[1]);
+		strcat(argv[2],ext);
+		argc++;
+	}
+	else
+		return 0;
 }
 fp=fopen(argv[1],"rb");
 if(fp==NULL)
@@ -100,13 +108,13 @@ printf("\n[Pass2]");
 fp=fopen(argv[1],"r");
 if(fp==NULL)
 {
-	printf("[!]Input file cannot be opened.\n");
+	printf("\n[!]Input file cannot be opened.\n");
 	return -1;
 }
 fp2=fopen(argv[2],"wb");
 if(fp2==NULL)
 {
-	printf("[!]Output file cannot be opened.\n");
+	printf("\n[!]Output file cannot be opened.\n");
 	return -2;
 }
 
@@ -116,7 +124,10 @@ printf("\nWriting File Header.");
 	writeHeader(fp2);
 printf("\nWriting compressed content.");
 	while(fread(&ch,sizeof(char),1,fp)!=0)
+	{	
+		//printf("\n%c replaced with ",ch);
 		writeCode(ch,fp2);	//write corresponding code into fp2
+	}
 fclose(fp);
 fclose(fp2);
 
@@ -126,25 +137,26 @@ return 0;
 
 void writeHeader(FILE *f)
 {//Table mapping 'codewords' to actual symbols
-typedef struct symCode
-{ char x;
-  char code[MAX];  // TODO: Sometimes Max length of codeword >=12, Handle that case
-}symCode;
 symCode record;
 node *p;
-int temp=0;
-unsigned char padding,i=0;	//TODO: i shouldnt be int, because max no. of char(byte)=2^8=256, but i can have max value=255,here
+int temp=0,i=0;
 p=HEAD;
 while(p!=NULL)	//determine number of unique symbols and padding of bits
 {
 	temp+=(strlen(p->code)) * (p->freq);		//temp stores padding
-	if(strlen(p->code)>MAX) printf("\nCodewords are longer than usual.");	//TODO: Solve this case
+	if(strlen(p->code) > MAX) printf("\n[!] Codewords are longer than usual.");	//TODO: Solve this case
 	temp%=8;
 	i++;
 	p=p->next;
 }
-fwrite(&i,sizeof(char),1,f);	//read these many structures while reading
-//printf("\nN=%d",i);
+
+if(i==256)
+	N=0;	//if 256 diff bit combinations exist, then alias 256 as 0
+else 
+	N=i;
+
+fwrite(&N,sizeof(unsigned char),1,f);	//read these many structures while reading
+printf("\nN=%u",i);
 
 p=HEAD;
 while(p!=NULL)	//start from HEAD, write each char & its code
@@ -158,7 +170,7 @@ while(p!=NULL)	//start from HEAD, write each char & its code
 //discard 'padding' bits before data, while reading
 padding=8-(char)temp;	//int to char & padding = 8-bitsExtra
 fwrite(&padding,sizeof(char),1,f);
-//printf("\npadding=%d",padding);
+printf("\nPadding=%d",padding);
 //do actual padding
 for(i=0;i<padding;i++)
 	writeBit(0,f);
@@ -169,7 +181,7 @@ void writeCode(char ch,FILE *f)
 {
 char *code;
 code=getCode(ch);
-//printf("\nwriting %s",code);
+//printf("\n%s\n",code);
 	while(*code!='\0')
 	{
 		if(*code=='1')
@@ -196,6 +208,7 @@ void writeBit(int b,FILE *f)
 	
 	if(cnt==8)	//buffer full
 	{
+//		printf("[%s]",bitsInChar(byte));
 		fwrite(&byte,sizeof(char),1,f);
 		cnt=0; byte=0;	//reset buffer
 		return;// buffer written to file
