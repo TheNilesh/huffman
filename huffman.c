@@ -1,12 +1,13 @@
 /* Title: Huffman Coding for files
+   URL: htts://github.com/TheniL/huffman
    Date_start: 25/11/2014
+   OC 1: 01/12/2014
    Author: niLesh	*/
 /*
-DONE: '#' Should not be tag for internal nodes, identify internal node with some other tag
-DONE: read input files in binary mode.
-DOING: determine MAX at runtime
-TODO: Make program efficient by sorting linked list in descending order.(high speed searching)
-TODO: Store code from struct in bit array form, rather than string form, to save space
+TODO: determine MAX at runtime, solve Codewords longer than MAX
+TODO: Use free() to deallocate memory
+TODO: sort linked list in non-increasing order, at genCode().
+TODO: Store code in bit array form(in Header), rather than string form, to save space
 */
 
 #include<stdio.h>
@@ -64,6 +65,7 @@ p=HEAD;
    p=p->next;
  }
 }
+
 int main(int argc, char *argv[])
 {
 FILE *fp,*fp2;
@@ -71,9 +73,17 @@ char ch;
 int t;
 HEAD=NULL;
 ROOT=NULL;
+if(argc<3)
+{
+	printf("Usage:\n %s <input-file-to-zip> <zipped-output-file>\n**Huffman File Compressor**\nAuthor: niLesh Akhade\nhttps://github.com/TheniL/huffman\n",argv[0]);
+	return 0;
+}
 fp=fopen(argv[1],"rb");
 if(fp==NULL)
-{ printf("\nFile open error.\n");	return -1; }
+{
+	printf("[!]Input file cannot be opened.\n");
+	return -1;
+}
 
 printf("\n[Pass1]");
 printf("\nReading input file %s",argv[1]);
@@ -81,8 +91,6 @@ printf("\nReading input file %s",argv[1]);
 		addSymbol(ch);
 	fclose(fp);
 
-printf("\nReading frequencies of characters.");
-//printll();
 printf("\nConstructing Huffman-Tree..");
 makeTree();
 printf("\nAssigning Codewords.\n");
@@ -90,12 +98,20 @@ genCode(ROOT,"\0");	//preorder traversal
 
 printf("\n[Pass2]");
 fp=fopen(argv[1],"r");
-fp2=fopen(strcat(argv[1],".hzip"),"wb");
-if(fp==NULL || fp2==NULL)
-{ printf("\nFile open error.\n");return -1; }
+if(fp==NULL)
+{
+	printf("[!]Input file cannot be opened.\n");
+	return -1;
+}
+fp2=fopen(argv[2],"wb");
+if(fp2==NULL)
+{
+	printf("[!]Output file cannot be opened.\n");
+	return -2;
+}
 
-printf("\nReading input file");
-printf("\nWriting file %s",argv[1]);
+printf("\nReading input file %s",argv[1]);
+printf("\nWriting file %s",argv[2]);
 printf("\nWriting File Header.");
 	writeHeader(fp2);
 printf("\nWriting compressed content.");
