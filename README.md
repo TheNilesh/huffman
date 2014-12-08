@@ -10,16 +10,19 @@ About
 
 Huffman Algorithm is an efficient way for file Compression and Decompression.
 This program exactly follows huffman algorithm. It reads frequent characters from input file and replace it with shorter binary codeword.
-The original file can be produced again without loosing ay bit.
+The original file can be produced again without loosing any bit.
 
 Usage
 =====
+Compression:
 ```
-	gcc huffman.c
-	./a.out <file to compress>
+	./encode <file to compress>
 ```
 Output file named <inputfile>.hzip will be produced.
-Decompression program is under development.
+Decompression:
+```
+	./decode <file to uncompress>
+```
  
 File Header
 ============================
