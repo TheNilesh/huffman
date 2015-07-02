@@ -1,7 +1,7 @@
 **Huffman Algorithm for File Compression**
 =========================
 
-https://github.com/TheniL/huffman/  
+https://github.com/TheNilesh/huffman/  
 License: Public Domain, no warranty  
 Nilesh Akhade
 
@@ -36,9 +36,10 @@ File Header
 Algorithm
 ============================
 [Pass1]
-1. Read input file
-2. Create sorted linked list of characters from file, as per character frequency
+0. Read input file
+0. Create sorted linked list of characters from file, as per character frequency
    for eah character ch from file
+```
 	if( ch available in linked list at node p) then 
 	{
 		p.freq++;
@@ -46,20 +47,20 @@ Algorithm
 	}
 	else
 		add new node at beginning of linked list with frequency=1;
-
-3. Construct huffman tree from linked list
-   i.Create new node q, join two least freq nodes to its left and right
-   ii.insert created node q into ascending list
-   iii. repeat i & ii till only one nodes remains, i.e, ROOT of h-tree
-   iv. Traverse tree in preorder mark each node with its codeword. simultaneously Recreate linked list of leaf nodes.
+```
+0. Construct huffman tree from linked list
+   .Create new node q, join two least freq nodes to its left and right
+   .insert created node q into ascending list
+   . repeat i & ii till only one nodes remains, i.e, ROOT of h-tree
+   . Traverse tree in preorder mark each node with its codeword. simultaneously Recreate linked list of leaf nodes.
 
 [Pass2]
-4. Write Mapping Table(character to codeword) to output file.
-5. Read input file.
-6. Write codeword in place of each character in input file to output file
+0. Write Mapping Table(character to codeword) to output file.
+0. Read input file.
+0. Write codeword in place of each character in input file to output file
    for each character ch from input file
 	write corresponding codeword into o/p file (lookup in mapping table OR linked list)
-7. End
+0. End
 
 Contributing
 ============
@@ -89,3 +90,4 @@ Development
 
 To do:
 * Binary files, like jpeg,mp3 support
+* Run scan to group repeating bit patterns.
