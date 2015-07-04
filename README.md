@@ -24,18 +24,36 @@ Decompression:
 	./decode <file to uncompress>
 ```
  
-File Header
+File Structure
 ============================
-| N= total number of unique characters(1 byte)
-| Character 1 (1 byte) | Binary codeword(string form) for Character 1 (MAX bytes) |
-... 
-| Character N (1 byte) | Binary codeword for Character N(string form)(MAX bytes) |
-| padding(1 byte) | 0's, p times (p bits)|
-| DATA |
+
+<table>
+<tr> <td colspan="2">  N= total number of unique characters(1 byte)              </td> </tr>
+<tr> <td> Character[1 byte]   </td><td>  Binary codeword String Form[MAX bytes]  </td> </tr>
+<tr> <td> Character[1 byte]   </td><td>  Binary codeword String Form[MAX bytes]  </td> </tr>
+<tr> <td colspan="2">              N times                                       </td> </tr>
+<tr> <td> p (1 byte)          </td><td> p times 0's (p bits)                     </td> </tr>
+<tr> <td colspan="2">  DATA                                                      </td> </tr>
+</table>
+
+p = Padding done to ensure file fits in whole number of bytes. eg, file of 4 bytes + 3 bits must ne padded by 5 bits to make it 5 bytes.
+
+Example
+----------------------------
+Text: aabcbaab
+
+| Content                           | Comment                               |
+|-----------------------------------|---------------------------------------|
+|3                                  | N=3 (a,b,c)                           |
+|a "1"                              | character and corresponding code "1"  |
+|b "01"                             | character and corresponding code "01" |
+|c "00"                             | character and corresponding code "00" |
+|4              		    | Padding count                         |
+|[0000] 				    | Padding 4 zeroes                      |
+|[1] [1] [01] [00] [01] [1] [1] [01]| Actual data, code in place of char    |
 
 Algorithm
 ============================
-[Pass1]
 0. Read input file
 0. Create sorted linked list of characters from file, as per character frequency
    for eah character ch from file
@@ -49,12 +67,10 @@ Algorithm
 		add new node at beginning of linked list with frequency=1;
 ```
 0. Construct huffman tree from linked list
-   .Create new node q, join two least freq nodes to its left and right
-   .insert created node q into ascending list
-   . repeat i & ii till only one nodes remains, i.e, ROOT of h-tree
-   . Traverse tree in preorder mark each node with its codeword. simultaneously Recreate linked list of leaf nodes.
-
-[Pass2]
+   0. Create new node q, join two least freq nodes to its left and right
+   0. Insert created node q into ascending list
+   0. Repeat i & ii till only one nodes remains, i.e, ROOT of h-tree
+   0. Traverse tree in preorder mark each node with its codeword. simultaneously Recreate linked list of leaf nodes.
 0. Write Mapping Table(character to codeword) to output file.
 0. Read input file.
 0. Write codeword in place of each character in input file to output file
@@ -90,4 +106,5 @@ Development
 
 To do:
 * Binary files, like jpeg,mp3 support
-* Run scan to group repeating bit patterns.
+* Run scan to group repeating bit patterns, not bit.
+* Unicode support
