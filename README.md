@@ -9,8 +9,8 @@ About
 =====
 
 Huffman Algorithm is an efficient way for file Compression and Decompression.
-This program exactly follows huffman algorithm. It reads frequent characters from input file and replace it with shorter binary codeword.
-The original file can be produced again without loosing any bit.
+This program exactly follows huffman algorithm. It reads frequent characters from input file and replaces them with shorter binary codeword.
+The original file can be produced again without losing any bit.
 
 Usage
 =====
@@ -70,7 +70,7 @@ Algorithm
 0. Construct huffman tree from linked list
    0. Create new node q, join two least freq nodes to its left and right
    0. Insert created node q into ascending list
-   0. Repeat i & ii till only one nodes remains, i.e, ROOT of h-tree
+   0. Repeat i & ii till only one node remains, i.e, ROOT of h-tree
    0. Traverse tree in preorder mark each node with its codeword. simultaneously Recreate linked list of leaf nodes.
 0. Write Mapping Table(character to codeword) to output file.
 0. **(Pass 2)** Read input file.
